@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { text-align: center; font-family: sans-serif; background: #2980b9; color: white; margin-top: 100px; }
+        button { padding: 10px 20px; font-size: 16px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>Rock, Paper, Scissors</h2>
+    <button onclick="play('Rock')">Rock</button>
+    <button onclick="play('Paper')">Paper</button>
+    <button onclick="play('Scissors')">Scissors</button>
+    <h3 id="outcome"></h3>
+
+    <script>
+        function play(playerChoice) {
+            const choices = ['Rock', 'Paper', 'Scissors'];
+            const botChoice = choices[Math.floor(Math.random() * 3)];
+            let result = "";
+
+            if (playerChoice === botChoice) result = "It's a tie!";
+            else if (
+                (playerChoice === 'Rock' && botChoice === 'Scissors') ||
+                (playerChoice === 'Paper' && botChoice === 'Rock') ||
+                (playerChoice === 'Scissors' && botChoice === 'Paper')
+            ) result = "You win!";
+            else result = "You lose!";
+
+            document.getElementById('outcome').innerText = `You chose ${playerChoice}. Bot chose ${botChoice}. ${result}`;
+        }
+    </script>
+</body>
+</html>
