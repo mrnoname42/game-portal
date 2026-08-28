@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { text-align: center; font-family: sans-serif; background: #f1c40f; color: #333; margin-top: 100px; }
+        #coin { font-size: 80px; cursor: pointer; user-select: none; transition: transform 0.1s; }
+        #coin:active { transform: scale(0.9); }
+    </style>
+</head>
+<body>
+    <h2>Coin Clicker</h2>
+    <p>Coins: <span id="score">0</span></p>
+    <div id="coin" onclick="addCoin()">🪙</div>
+
+    <script>
+        let score = 0;
+        function addCoin() {
+            score++;
+            document.getElementById('score').innerText = score;
+        }
+    </script>
+</body>
+</html>
