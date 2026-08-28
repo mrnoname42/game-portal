@@ -23,5 +23,11 @@
         "title": "Quantum Clicker",
         "description": "Get rich and click!",
         "file": "game5.html"
+    },
+    {
+        "title": "mini 3d",
+        "description": "mine!",
+        "file": "game6.html"
     }
+
 ]
