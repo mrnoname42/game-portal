@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Clicker</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons for vanilla JS -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* Floating particle animation */
+        @keyframes float-up {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-80px) scale(1.5);
+            }
+        }
+        .animate-float-up {
+            animation: float-up 1s ease-out forwards;
+        }
+
+        /* Pulsing star background animation */
+        @keyframes pulse-star {
+            0% { opacity: 0.2; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* Custom Scrollbar for store */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #334155;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500/30 overflow-x-hidden">
+
+    <!-- Background Starfield effect -->
+    <div id="starfield" class="fixed inset-0 pointer-events-none opacity-20 z-0 overflow-hidden" aria-hidden="true">
+        <!-- Stars will be injected here by JS -->
+    </div>
+
+    <div class="max-w-6xl mx-auto p-4 md:p-6 lg:p-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 min-h-[90vh]">
+        
+        <!-- LEFT COLUMN: Main Game Area -->
+        <div class="lg:col-span-5 flex flex-col items-center pt-8 md:pt-16 select-none relative h-[50vh] lg:h-auto">
+            
+            <div class="text-center mb-8">
+                <h1 class="text-4xl md:text-5xl font-black bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-400 text-transparent bg-clip-text flex items-center justify-center gap-3 mb-2">
+                    <i data-lucide="stars" class="w-8 h-8 text-indigo-400"></i>
+                    Cosmic Clicker
+                </h1>
+                <p class="text-slate-400 text-sm md:text-base font-medium">Harness the power of the universe.</p>
+            </div>
+
+            <div class="flex-1 flex flex-col items-center justify-center w-full">
+                <div class="text-center mb-8">
+                    <div id="dustDisplay" class="text-5xl md:text-7xl font-bold tracking-tight text-white drop-shadow-md">
+                        0
+                    </div>
+                    <div class="text-indigo-300 font-medium text-lg mt-2 flex items-center justify-center gap-2">
+                        <span>Star Dust</span>
+                        <span id="cpsDisplay" class="text-sm bg-indigo-900/50 px-2 py-0.5 rounded-full text-indigo-200">
+                            0 / sec
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Clickable Star Area -->
+                <div id="clickTarget" class="relative cursor-pointer group">
+                    <!-- Outer glow -->
+                    <div class="absolute inset-0 bg-indigo-500 rounded-full blur-[60px] opacity-20 group-hover:opacity-40 group-active:opacity-60 transition-opacity duration-300 mix-blend-screen"></div>
+                    
+                    <!-- The Star itself -->
+                    <div class="w-48 h-48 md:w-64 md:h-64 rounded-full bg-gradient-to-tr from-indigo-900 via-purple-600 to-pink-400 shadow-[0_0_80px_-20px_rgba(168,85,247,0.5)] border-4 border-indigo-400/30 flex items-center justify-center relative transform transition-transform duration-100 group-active:scale-95 group-hover:scale-105 z-10 overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                        <i data-lucide="sparkles" class="w-24 h-24 text-white/80 z-10"></i>
+                    </div>
+
+                    <!-- Container for floating click particles -->
+                    <div id="particleContainer" class="absolute inset-0 pointer-events-none z-50"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Upgrades and Store -->
+        <div class="lg:col-span-7 flex flex-col bg-slate-900/50 backdrop-blur-md rounded-3xl border border-slate-800 p-4 md:p-6 shadow-2xl overflow-hidden h-[60vh] lg:h-auto">
+            
+            <!-- Header Tabs/Info -->
+            <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
+                <h2 class="text-2xl font-bold flex items-center gap-2">
+                    <i data-lucide="settings" class="w-6 h-6 text-slate-400"></i>
+                    Upgrades & Facilities
+                </h2>
+                <div class="text-right">
+                    <p class="text-xs text-slate-500 uppercase tracking-wider">Total Earned</p>
+                    <p id="totalDustDisplay" class="text-sm font-semibold text-slate-300 flex items-center gap-1 justify-end">
+                        <i data-lucide="trophy" class="w-3 h-3 text-yellow-500"></i>
+                        0
+                    </p>
+                </div>
+            </div>
+
+            <div class="overflow-y-auto pr-2 space-y-4 pb-4 custom-scrollbar flex-1">
+                
+                <!-- CLICK UPGRADES SECTION -->
+                <div class="mb-6">
+                    <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 pl-2">Click Enhancements</h3>
+                    <button id="btnClickUpgrade" class="w-full text-left flex items-center justify-between p-4 rounded-xl border transition-all duration-200 group bg-slate-900/50 border-slate-800 opacity-60 cursor-not-allowed">
+                        <div class="flex items-center gap-4">
+                            <div id="clickUpgradeIconBg" class="p-3 rounded-lg bg-slate-800 text-slate-600">
+                                <i data-lucide="mouse-pointer-2" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-100 flex items-center gap-2">
+                                    Cosmic Amplifier <span id="clickUpgradeLevelDisplay" class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full">Lvl 0</span>
+                                </h4>
+                                <p id="clickUpgradeDesc" class="text-sm text-slate-400 mt-1">
+                                    Increases tap power. Next: +1
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div id="clickUpgradeCostDisplay" class="font-bold text-lg text-slate-500">
+                                Cost: 25
+                            </div>
+                            <div id="clickPowerDisplay" class="text-sm text-indigo-400 font-medium">
+                                Power: 1 / click
+                            </div>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- FACILITIES SECTION -->
+                <div>
+                    <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 pl-2">Facilities</h3>
+                    <div id="facilitiesContainer" class="space-y-3">
+                        <!-- Buildings will be injected here by JS -->
+                    </div>
+                </div>
+
+            </div>
+            
+            <!-- Footer Controls -->
+            <div class="mt-4 pt-4 border-t border-slate-800 flex justify-between items-center text-sm text-slate-500">
+                <p id="saveStatus">Game auto-saves every 5 seconds.</p>
+                <button id="btnHardReset" class="flex items-center gap-1.5 hover:text-red-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-400/10">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    Hard Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- GAME DATA CONFIGURATION ---
+        const INITIAL_CLICK_POWER = 1;
+        const CLICK_UPGRADE_BASE_COST = 25;
+        const CLICK_UPGRADE_MULTIPLIER = 1.5;
+
+        const BUILDINGS_CONFIG = [
+            { id: 'probe', name: 'Auto-Probe', description: 'Gathers a tiny amount of dust.', baseCost: 15, cps: 1, icon: 'mouse-pointer-2', colorClass: 'text-blue-400' },
+            { id: 'miner', name: 'Asteroid Miner', description: 'Extracts dust from nearby rocks.', baseCost: 100, cps: 5, icon: 'pickaxe', colorClass: 'text-gray-400' },
+            { id: 'harvester', name: 'Comet Harvester', description: 'Chases comets for their rich tails.', baseCost: 1100, cps: 50, icon: 'rocket', colorClass: 'text-orange-400' },
+            { id: 'satellite', name: 'Nebula Scoop', description: 'Siphons raw energy from nebulas.', baseCost: 12000, cps: 400, icon: 'satellite', colorClass: 'text-purple-400' },
+            { id: 'dyson', name: 'Dyson Swarm', description: 'Harnesses the power of an entire star.', baseCost: 130000, cps: 5000, icon: 'zap', colorClass: 'text-yellow-400' }
+        ];
+
+        // --- STATE VARIABLES ---
+        let dust = 0;
+        let totalDust = 0;
+        let clickPower = INITIAL_CLICK_POWER;
+        let clickUpgradeLevel = 0;
+        // Deep copy the config to initialize buildings state
+        let buildings = JSON.parse(JSON.stringify(BUILDINGS_CONFIG)).map(b => ({ ...b, count: 0, cost: b.baseCost }));
+        let cps = 0;
+
+        // --- DOM ELEMENTS ---
+        const elDust = document.getElementById('dustDisplay');
+        const elTotalDust = document.getElementById('totalDustDisplay');
+        const elCps = document.getElementById('cpsDisplay');
+        const clickTarget = document.getElementById('clickTarget');
+        const particleContainer = document.getElementById('particleContainer');
+        const facilitiesContainer = document.getElementById('facilitiesContainer');
+        const saveStatus = document.getElementById('saveStatus');
+        
+        // Click Upgrade Elements
+        const btnClickUpgrade = document.getElementById('btnClickUpgrade');
+        const elClickUpgradeLevel = document.getElementById('clickUpgradeLevelDisplay');
+        const elClickUpgradeDesc = document.getElementById('clickUpgradeDesc');
+        const elClickUpgradeCost = document.getElementById('clickUpgradeCostDisplay');
+        const elClickPower = document.getElementById('clickPowerDisplay');
+        const elClickUpgradeIconBg = document.getElementById('clickUpgradeIconBg');
+
+        // --- UTILS ---
+        function formatNumber(num) {
+            if (num < 1000) return Math.floor(num).toString();
+            const suffixes = ["", "k", "M", "B", "T", "Qa", "Qi"];
+            const suffixNum = Math.floor(("" + Math.floor(num)).length / 3);
+            let shortValue = parseFloat((suffixNum !== 0 ? (num / Math.pow(1000, suffixNum)) : num).toPrecision(3));
+            if (shortValue % 1 !== 0) {
+                shortValue = shortValue.toFixed(1);
+            }
+            return shortValue + suffixes[suffixNum];
+        }
+
+        function getNextClickUpgradeCost() {
+            return Math.floor(CLICK_UPGRADE_BASE_COST * Math.pow(CLICK_UPGRADE_MULTIPLIER, clickUpgradeLevel));
+        }
+
+        function calculateCps() {
+            cps = buildings.reduce((sum, b) => sum + (b.count * b.cps), 0);
+        }
+
+        // --- SAVE / LOAD SYSTEM ---
+        function saveGame() {
+            const saveData = { dust, totalDust, clickPower, clickUpgradeLevel, buildings: buildings.map(b => ({ id: b.id, count: b.count, cost: b.cost })) };
+            localStorage.setItem('cosmicClickerSave', JSON.stringify(saveData));
+            
+            // Temporary save indicator
+            const originalText = saveStatus.innerText;
+            saveStatus.innerText = "Game saved!";
+            saveStatus.classList.add("text-emerald-400");
+            setTimeout(() => {
+                saveStatus.innerText = originalText;
+                saveStatus.classList.remove("text-emerald-400");
+            }, 1000);
+        }
+
+        function loadGame() {
+            const savedData = localStorage.getItem('cosmicClickerSave');
+            if (savedData) {
+                try {
+                    const parsed = JSON.parse(savedData);
+                    dust = parsed.dust || 0;
+                    totalDust = parsed.totalDust || 0;
+                    clickPower = parsed.clickPower || INITIAL_CLICK_POWER;
+                    clickUpgradeLevel = parsed.clickUpgradeLevel || 0;
+                    
+                    if (parsed.buildings) {
+                        buildings = BUILDINGS_CONFIG.map(configBuilding => {
+                            const savedBuilding = parsed.buildings.find(b => b.id === configBuilding.id);
+                            if (savedBuilding) {
+                                return { ...configBuilding, count: savedBuilding.count, cost: savedBuilding.cost };
+                            }
+                            return { ...configBuilding, count: 0, cost: configBuilding.baseCost };
+                        });
+                    }
+                } catch (e) {
+                    console.error("Failed to load save", e);
+                }
+            }
+            calculateCps();
+        }
+
+        // --- UI UPDATES ---
+        function updateUI() {
+            // Main Stats
+            elDust.innerText = formatNumber(dust);
+            elTotalDust.innerHTML = `<i data-lucide="trophy" class="w-3 h-3 text-yellow-500 inline-block mr-1"></i> ${formatNumber(totalDust)}`;
+            elCps.innerText = `${formatNumber(cps)} / sec`;
+            
+            // Re-initialize lucide icons for dynamic content if needed, though mostly handled
+            lucide.createIcons();
+
+            // Click Upgrade UI
+            const clickCost = getNextClickUpgradeCost();
+            const canAffordClick = dust >= clickCost;
+            
+            elClickUpgradeLevel.innerText = `Lvl ${clickUpgradeLevel}`;
+            elClickUpgradeCost.innerText = `Cost: ${formatNumber(clickCost)}`;
+            elClickPower.innerText = `Power: ${formatNumber(clickPower)} / click`;
+            elClickUpgradeDesc.innerText = `Increases tap power. Next: +${((clickUpgradeLevel + 1) % 5 === 0) ? 'Double Power!' : '1'}`;
+
+            if (canAffordClick) {
+                btnClickUpgrade.className = "w-full text-left flex items-center justify-between p-4 rounded-xl border transition-all duration-200 group bg-slate-800 hover:bg-slate-700 border-indigo-500/30 hover:border-indigo-500 cursor-pointer";
+                elClickUpgradeCost.className = "font-bold text-lg text-white";
+                elClickUpgradeIconBg.className = "p-3 rounded-lg bg-indigo-900/50 text-indigo-400";
+            } else {
+                btnClickUpgrade.className = "w-full text-left flex items-center justify-between p-4 rounded-xl border transition-all duration-200 group bg-slate-900/50 border-slate-800 opacity-60 cursor-not-allowed";
+                elClickUpgradeCost.className = "font-bold text-lg text-slate-500";
+                elClickUpgradeIconBg.className = "p-3 rounded-lg bg-slate-800 text-slate-600";
+            }
+
+            // Facilities UI
+            buildings.forEach(b => {
+                const btn = document.getElementById(`btn-building-${b.id}`);
+                if (!btn) return;
+                
+                const canAfford = dust >= b.cost;
+                const costDisplay = document.getElementById(`cost-${b.id}`);
+                const iconBg = document.getElementById(`iconbg-${b.id}`);
+                
+                // Update text values
+                document.getElementById(`count-${b.id}`).innerText = `x${b.count}`;
+                costDisplay.innerText = formatNumber(b.cost);
+                
+                const totalDisplay = document.getElementById(`total-${b.id}`);
+                if(totalDisplay) {
+                     if(b.count > 0) {
+                         totalDisplay.style.display = 'block';
+                         totalDisplay.innerText = `Total: ${formatNumber(b.count * b.cps)}/s`;
+                     } else {
+                         totalDisplay.style.display = 'none';
+                     }
+                }
+
+                // Update styling based on affordability
+                if (canAfford) {
+                    btn.className = "w-full text-left flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border transition-all duration-200 bg-slate-800 hover:bg-slate-700 border-slate-700 hover:border-slate-500 cursor-pointer";
+                    costDisplay.className = "font-bold text-lg sm:text-xl text-white";
+                    iconBg.className = `p-3 rounded-lg bg-slate-900/80 ${b.colorClass}`;
+                } else {
+                    btn.className = "w-full text-left flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border transition-all duration-200 bg-slate-900/50 border-slate-800 opacity-60 cursor-not-allowed";
+                    costDisplay.className = "font-bold text-lg sm:text-xl text-slate-500";
+                    iconBg.className = `p-3 rounded-lg bg-slate-900/80 text-slate-600`;
+                }
+            });
+        }
+
+        function renderFacilitiesList() {
+            facilitiesContainer.innerHTML = ''; // Clear existing
+            buildings.forEach(b => {
+                const btn = document.createElement('button');
+                btn.id = `btn-building-${b.id}`;
+                // Initial classes will be set by updateUI, but set base layout here
+                btn.className = "w-full text-left flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border transition-all duration-200";
+                
+                btn.innerHTML = `
+                    <div class="flex items-center gap-4 mb-3 sm:mb-0">
+                        <div id="iconbg-${b.id}" class="p-3 rounded-lg bg-slate-900/80">
+                            <i data-lucide="${b.icon}" class="w-8 h-8"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-100 text-lg flex items-center gap-2">
+                                ${b.name} 
+                                <span id="count-${b.id}" class="text-xs font-black bg-slate-900 text-slate-300 px-2 py-1 rounded-full shadow-inner">
+                                    x0
+                                </span>
+                            </h4>
+                            <p class="text-sm text-slate-400 mt-0.5">${b.description}</p>
+                            <p class="text-xs font-semibold text-emerald-400 mt-1">+${formatNumber(b.cps)} dust / sec</p>
+                        </div>
+                    </div>
+                    <div class="sm:text-right flex sm:flex-col justify-between sm:justify-center items-center sm:items-end border-t sm:border-t-0 border-slate-700/50 pt-3 sm:pt-0">
+                        <div id="cost-${b.id}" class="font-bold text-lg sm:text-xl text-slate-500">
+                            0
+                        </div>
+                        <div id="total-${b.id}" style="display:none;" class="text-xs text-slate-500 mt-1 font-medium">
+                            Total: 0/s
+                        </div>
+                    </div>
+                `;
+                
+                btn.onclick = () => handleBuyBuilding(b.id);
+                facilitiesContainer.appendChild(btn);
+            });
+            lucide.createIcons(); // Initialize icons in newly added html
+        }
+
+        // --- ACTIONS ---
+        function handleMainClick(e) {
+            // Prevent default touch behavior (like zooming) if needed
+            if(e.type === 'touchstart') e.preventDefault(); 
+
+            dust += clickPower;
+            totalDust += clickPower;
+
+            // Create particle effect
+            const rect = clickTarget.getBoundingClientRect();
+            let x, y;
+            
+            // Normalize coordinates between mouse and touch
+            if (e.type === 'touchstart' && e.touches.length > 0) {
+                x = e.touches[0].clientX - rect.left;
+                y = e.touches[0].clientY - rect.top;
+            } else if (e.clientX && e.clientY) {
+                x = e.clientX - rect.left;
+                y = e.clientY - rect.top;
+            } else {
+                x = rect.width / 2;
+                y = rect.height / 2;
+            }
+
+            // Add randomness
+            x += (Math.random() - 0.5) * 40;
+            y += (Math.random() - 0.5) * 40;
+
+            const particle = document.createElement('div');
+            particle.className = "absolute text-2xl font-bold text-white drop-shadow-lg z-50 animate-float-up pointer-events-none";
+            particle.style.left = `${x}px`;
+            particle.style.top = `${y}px`;
+            particle.innerText = `+${formatNumber(clickPower)}`;
+            
+            particleContainer.appendChild(particle);
+
+            // Cleanup particle
+            setTimeout(() => {
+                particle.remove();
+            }, 1000);
+
+            updateUI();
+        }
+
+        function handleBuyBuilding(id) {
+            const b = buildings.find(b => b.id === id);
+            if (b && dust >= b.cost) {
+                dust -= b.cost;
+                b.count += 1;
+                b.cost = Math.floor(b.baseCost * Math.pow(1.15, b.count));
+                calculateCps();
+                updateUI();
+            }
+        }
+
+        function handleBuyClickUpgrade() {
+            const cost = getNextClickUpgradeCost();
+            if (dust >= cost) {
+                dust -= cost;
+                clickUpgradeLevel += 1;
+                
+                if ((clickUpgradeLevel) % 5 === 0) {
+                    clickPower *= 2;
+                } else {
+                    clickPower += 1;
+                }
+                updateUI();
+            }
+        }
+
+        function handleHardReset() {
+            // Custom modal replacement for alert/confirm
+            const overlay = document.createElement('div');
+            overlay.className = "fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4";
+            
+            const modal = document.createElement('div');
+            modal.className = "bg-slate-900 border border-slate-700 p-6 rounded-2xl max-w-sm w-full shadow-2xl";
+            modal.innerHTML = `
+                <h3 class="text-xl font-bold text-white mb-2">Hard Reset</h3>
+                <p class="text-slate-400 mb-6 text-sm">Are you sure you want to completely wipe your save? This cannot be undone.</p>
+                <div class="flex justify-end gap-3">
+                    <button id="btnCancelReset" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors">Cancel</button>
+                    <button id="btnConfirmReset" class="px-4 py-2 rounded-lg bg-red-500/10 text-red-500 border border-red-500/50 hover:bg-red-500 hover:text-white transition-colors">Confirm Wipe</button>
+                </div>
+            `;
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+
+            document.getElementById('btnCancelReset').onclick = () => overlay.remove();
+            
+            document.getElementById('btnConfirmReset').onclick = () => {
+                localStorage.removeItem('cosmicClickerSave');
+                dust = 0;
+                totalDust = 0;
+                clickPower = INITIAL_CLICK_POWER;
+                clickUpgradeLevel = 0;
+                buildings = JSON.parse(JSON.stringify(BUILDINGS_CONFIG)).map(b => ({ ...b, count: 0, cost: b.baseCost }));
+                calculateCps();
+                updateUI();
+                overlay.remove();
+            };
+        }
+
+        // --- INITIALIZATION & LOOPS ---
+        function createStarfield() {
+            const sf = document.getElementById('starfield');
+            for(let i=0; i<50; i++) {
+                const star = document.createElement('div');
+                star.className = "absolute rounded-full bg-white";
+                const size = Math.random() * 3;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.animation = `pulse-star ${Math.random() * 3 + 2}s infinite alternate`;
+                sf.appendChild(star);
+            }
+        }
+
+        // Event Listeners
+        clickTarget.addEventListener('mousedown', handleMainClick);
+        clickTarget.addEventListener('touchstart', handleMainClick, {passive: false});
+        btnClickUpgrade.addEventListener('click', handleBuyClickUpgrade);
+        document.getElementById('btnHardReset').addEventListener('click', handleHardReset);
+
+        // Game Loop (Passive Income) - Runs 10 times a second
+        setInterval(() => {
+            if (cps > 0) {
+                const addition = cps / 10;
+                dust += addition;
+                totalDust += addition;
+                updateUI();
+            }
+        }, 100);
+
+        // Save Loop - Runs every 5 seconds
+        setInterval(saveGame, 5000);
+
+        // Start
+        createStarfield();
+        renderFacilitiesList();
+        loadGame();
+        lucide.createIcons(); // Initial icon render
+        updateUI();
+
+    </script>
+</body>
+</html>
