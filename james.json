@@ -1,0 +1,17 @@
+[
+    {
+        "title": "Number Guesser",
+        "description": "Test your luck!",
+        "file": "game1.html"
+    },
+    {
+        "title": "Rock Paper Scissors",
+        "description": "The classic battle.",
+        "file": "game2.html"
+    },
+    {
+        "title": "Coin Clicker",
+        "description": "Click to get rich!",
+        "file": "game3.html"
+    }
+]
