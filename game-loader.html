@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playing Game...</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #111; color: white; font-family: sans-serif;}
+        .top-bar { padding: 10px; background: #222; display: flex; justify-content: space-between; align-items: center;}
+        .top-bar a { color: #1abc9c; text-decoration: none; font-weight: bold; }
+        iframe { width: 100vw; height: calc(100vh - 40px); border: none; }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="index.html">⬅ Back to Portal</a>
+        <span id="game-title">Loading...</span>
+    </div>
+
+    <iframe id="game-frame"></iframe>
+
+    <script>
+        // Get the game filename from the URL (e.g., ?game=game1.html)
+        const urlParams = new URLSearchParams(window.location.search);
+        const gameFile = urlParams.get('game');
+        
+        if (gameFile) {
+            document.getElementById('game-frame').src = gameFile;
+            document.getElementById('game-title').innerText = "Playing: " + gameFile;
+        } else {
+            document.getElementById('game-title').innerText = "Error: No game selected";
+        }
+    </script>
+</body>
+</html>
