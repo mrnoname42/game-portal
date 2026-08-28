@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>body { text-align: center; font-family: sans-serif; background: #e74c3c; color: white; margin-top: 100px; }</style>
+</head>
+<body>
+    <h2>Number Guesser</h2>
+    <p>Guess a number between 1 and 10</p>
+    <input type="number" id="guess" min="1" max="10">
+    <button onclick="checkGuess()">Guess</button>
+    <p id="result"></p>
+
+    <script>
+        let answer = Math.floor(Math.random() * 10) + 1;
+        function checkGuess() {
+            let userGuess = document.getElementById('guess').value;
+            let resultText = document.getElementById('result');
+            if (userGuess == answer) {
+                resultText.innerText = "You won! Reload to play again.";
+            } else {
+                resultText.innerText = userGuess > answer ? "Too high!" : "Too low!";
+            }
+        }
+    </script>
+</body>
+</html>
