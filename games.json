@@ -18,5 +18,10 @@
         "title": "cosmic clicker",
         "description": "Go to the cosmic riches!",
         "file": "game4.html"
+    },
+    {
+        "title": "Quantum Clicker",
+        "description": "Get rich and click!",
+        "file": "game5.html"
     }
 ]
