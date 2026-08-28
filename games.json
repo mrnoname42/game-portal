@@ -13,5 +13,10 @@
         "title": "Coin Clicker",
         "description": "Click to get rich!",
         "file": "game3.html"
+    },
+    {
+        "title": "cosmic clicker",
+        "description": "Clgo to the cosmic riches!",
+        "file": "game4.html"
     }
 ]
