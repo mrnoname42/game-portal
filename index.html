@@ -111,9 +111,9 @@
     <div class="game-list" id="game-list">
         <div class="status-message" id="loading-text">Loading your games database...</div>
     </div>
-
     <script>
-        fetch('games.json')
+        // Adding a timestamp query (?t=...) forces the browser to bypass the cache
+        fetch('games.json?t=' + new Date().getTime())
             .then(response => response.json())
             .then(games => {
                 const gameListContainer = document.getElementById('game-list');
@@ -140,5 +140,6 @@
                 document.getElementById('game-list').innerHTML = '<div class="status-message">⚠️ Could not load the games database. Please check your connection or JSON file.</div>';
             });
     </script>
+    
 </body>
 </html>
